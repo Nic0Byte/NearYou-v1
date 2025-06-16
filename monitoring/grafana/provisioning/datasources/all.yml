@@ -1,0 +1,59 @@
+apiVersion: 1
+
+datasources:
+  # ClickHouse
+  - name: ClickHouse
+    type: grafana-clickhouse-datasource
+    access: proxy
+    url: http://clickhouse-server:8123
+    jsonData:
+      defaultDatabase: nearyou
+      username: default
+      port: 8123
+      server: clickhouse-server
+      tlsSkipVerify: true
+      protocol: http
+      host: clickhouse-server
+    secureJsonData:
+      password: pwe@123@l@
+    editable: true
+    isDefault: false
+
+  # PostgreSQL
+  - name: PostgreSQL
+    type: postgres
+    url: postgres-postgis:5432
+    user: nearuser
+    secureJsonData:
+      password: nearypass
+    jsonData:
+      database: near_you_shops
+      sslmode: disable
+      postgresVersion: 1500
+    editable: true
+    isDefault: false
+
+  # Prometheus - Importante: nome esatto "Prometheus"
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 15s
+      httpMethod: GET
+    version: 1
+    editable: true
+
+  # Loki - Importante: nome esatto "Loki"
+  - name: Loki
+    type: loki
+    access: proxy
+    orgId: 1
+    url: http://loki:3100
+    isDefault: false
+    jsonData:
+      maxLines: 1000
+    version: 1
+    editable: true

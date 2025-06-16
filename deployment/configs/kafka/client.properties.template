@@ -1,0 +1,12 @@
+security.protocol=SSL
+
+# Percorso del truststore e password (formato PKCS12)
+ssl.truststore.location=/bitnami/kafka/config/certs/kafka.truststore.jks
+ssl.truststore.password=${KAFKA_KEYSTORE_PASS}
+ssl.truststore.type=PKCS12
+
+# Percorso del keystore, password e password della chiave (formato PKCS12)
+ssl.keystore.location=/bitnami/kafka/config/certs/kafka.keystore.jks
+ssl.keystore.password=${KAFKA_KEYSTORE_PASS}
+ssl.keystore.type=PKCS12
+ssl.key.password=${KAFKA_KEYSTORE_PASS}

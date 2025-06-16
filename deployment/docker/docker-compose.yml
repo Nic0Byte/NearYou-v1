@@ -1,0 +1,455 @@
+version: "3.9"
+
+services:
+  osrm-milano:
+    build:
+      context: ../..                      
+      dockerfile: deployment/docker/Dockerfile.osrm  
+    environment:
+      - PBF_URL=${PBF_URL}
+    volumes:
+      - ../scripts/init_osrm.sh:/opt/init_osrm.sh  
+      - ../../data:/data:rw                        
+    entrypoint:
+      - bash
+      - -c
+      - |
+        chmod +x /opt/init_osrm.sh && exec /opt/init_osrm.sh
+    ports:
+      - "5000:5000"
+
+
+  app:
+    build:
+      context: ../..                       
+      dockerfile: deployment/docker/Dockerfile 
+    volumes:
+      - ../..:/workspace:cached           
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: sleep infinity
+    privileged: true
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "echo", "ruok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  query-service:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile
+    command: >
+      uvicorn src.query_service.app:app
+      --host 0.0.0.0 --port 8004
+    env_file:
+      - ../../.env
+    volumes:
+      - ../..:/workspace:cached
+    ports:
+      - "8004:8004"
+    depends_on:
+      - clickhouse
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: bitnami/kafka:3.4
+    env_file:
+      - ../../.env                        
+    restart: unless-stopped
+    volumes:
+      - ../../certs:/bitnami/kafka/config/certs  
+      - ../../deployment/configs/kafka:/opt/client_config:ro  
+      #- kafka_data:/bitnami/kafka
+    
+    environment:
+      - KAFKA_ENABLE_KRAFT=false
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=no
+      - KAFKA_CFG_LISTENERS=SSL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=SSL://kafka:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=SSL
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=SSL:SSL
+      - KAFKA_CFG_SSL_KEYSTORE_LOCATION=/bitnami/kafka/config/certs/kafka.keystore.jks
+      - KAFKA_CFG_SSL_KEYSTORE_PASSWORD=${KAFKA_KEYSTORE_PASS}
+      - KAFKA_CFG_SSL_KEY_PASSWORD=${KAFKA_KEYSTORE_PASS}
+      - KAFKA_CFG_SSL_TRUSTSTORE_LOCATION=/bitnami/kafka/config/certs/kafka.truststore.jks
+      - KAFKA_CFG_SSL_TRUSTSTORE_PASSWORD=${KAFKA_KEYSTORE_PASS}
+      - KAFKA_CFG_SSL_KEYSTORE_TYPE=PKCS12
+      - KAFKA_CFG_SSL_TRUSTSTORE_TYPE=PKCS12
+      - KAFKA_CFG_SSL_CLIENT_AUTH=required
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    ports:
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9093"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  hivemq:
+    image: hivemq/hivemq-ce:latest
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  nifi:
+    image: apache/nifi:latest
+    environment:
+      - NIFI_WEB_HTTP_PORT=8081
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/nifi"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+ 
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse-server
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=pwe@123@l@
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  init_clickhouse:
+    build:
+      context: ../..                      
+      dockerfile: deployment/docker/Dockerfile  
+    volumes:
+      - ../..:/workspace:cached           
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: bash -c "chmod +x /workspace/deployment/scripts/init_clickhouse.sh && /workspace/deployment/scripts/init_clickhouse.sh"  # Aggiornato
+    depends_on:
+      - clickhouse
+    restart: "no"
+
+  message-generator:
+    build:
+      context: ../..                      
+      dockerfile: deployment/docker/Dockerfile  
+    command: >
+      uvicorn services.message_generator.app:app
+      --host 0.0.0.0 --port 8001
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace:cached           
+    env_file:
+      - ../../.env                        
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  producer:
+    build:
+      context: ../..                     
+      dockerfile: deployment/docker/Dockerfile  
+    volumes:
+      - ../..:/workspace:cached           
+      - ../../certs:/workspace/certs:ro   
+    command: python3 /workspace/src/data_pipeline/producer.py  
+    env_file:
+      - ../../.env                        
+    depends_on:
+      - kafka
+      - osrm-milano
+    restart: "no"
+
+  consumer:
+    build:
+      context: ../..                      
+      dockerfile: deployment/docker/Dockerfile  
+    volumes:
+      - ../..:/workspace:cached           
+      - ../../certs:/workspace/certs:ro   
+    command: >
+      python3 -m bytewax.run 
+      --workers 2
+      --snapshot-interval 30
+      src.data_pipeline.bytewax_flow:build_dataflow
+    depends_on:
+      - kafka
+      - clickhouse
+      - message-generator
+    environment:
+      - PYTHONPATH=/workspace
+    restart: unless-stopped
+
+  generate_users:
+    build:
+      context: ../..                      
+      dockerfile: deployment/docker/Dockerfile  
+    volumes:
+      - ../..:/workspace:cached           
+    command: python3 /workspace/src/data_pipeline/generate_users.py  
+    depends_on:
+      - clickhouse
+    restart: "no"
+
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: postgres-postgis
+    environment:
+      - POSTGRES_USER=nearuser
+      - POSTGRES_PASSWORD=nearypass
+      - POSTGRES_DB=near_you_shops
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "nearuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  init_postgres:
+    image: postgis/postgis:15-3.3
+    container_name: init-postgres
+    depends_on:
+      - postgres
+    volumes:
+      - ../scripts/init_postgres.sh:/docker-entrypoint-initdb.d/init_postgres.sh  
+    command:
+      [
+        "bash",
+        "-c",
+        "chmod +x /docker-entrypoint-initdb.d/init_postgres.sh && /docker-entrypoint-initdb.d/init_postgres.sh"
+      ]
+    restart: "no"
+
+  airflow-postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - airflow_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-redis:
+    image: redis:latest
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    image: apache/airflow:2.5.0
+    depends_on:
+      - airflow-postgres
+      - airflow-redis
+    environment:
+      - AIRFLOW_HOME=/opt/airflow_home
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    volumes:
+      - airflow_data:/opt/airflow_home
+    command:
+      ["airflow", "db", "init"]
+    restart: "no"
+
+  airflow-webserver:
+    image: apache/airflow:2.5.0
+    depends_on:
+      - airflow-postgres
+      - airflow-redis
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CORE__FERNET_KEY=uZ8CGq56QQcjCUGqj-ESyppA95968on1VGu1PTTPw30=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW_HOME=/opt/airflow_home
+      - AIRFLOW__WEBSERVER__WEB_SERVER_PORT=8080
+    volumes:
+      - airflow_data:/opt/airflow_home
+      - ../../airflow/dags:/opt/airflow_home/dags  # Aggiornato
+    ports:
+      - "8080:8080"
+    security_opt:
+      - seccomp:unconfined
+    command: ["webserver","-p","8080"]
+    restart: unless-stopped
+
+  airflow-scheduler:
+    image: apache/airflow:2.5.0
+    user: root
+    entrypoint: ""
+    depends_on:
+      - airflow-webserver
+      - airflow-postgres
+      - airflow-redis
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW_HOME=/opt/airflow_home
+      - AIRFLOW__CELERY__BROKER_URL=redis://airflow-redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CORE__WORKER_LOG_SERVER_BASE_URL=http://airflow-worker:8793
+    volumes:
+      - airflow_data:/opt/airflow_home
+      - ../../airflow/dags:/opt/airflow_home/dags  
+      - ../scripts/entrypoint.sh:/entrypoint.sh:ro  
+    security_opt:
+      - seccomp:unconfined
+    command: ["/bin/bash","/entrypoint.sh"]
+    restart: unless-stopped
+
+  airflow-worker:
+    image: apache/airflow:2.5.0
+    depends_on:
+      - airflow-scheduler
+      - airflow-postgres
+      - airflow-redis
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW_HOME=/opt/airflow_home
+      - AIRFLOW__CELERY__BROKER_URL=redis://airflow-redis:6379/0
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@airflow-postgres/airflow
+      - AIRFLOW__CORE__WORKER_LOG_SERVER_BASE_URL=http://airflow-worker:8793
+    volumes:
+      - airflow_data:/opt/airflow_home
+      - ../../airflow/dags:/opt/airflow_home/dags  
+    ports:
+      - "8793:8793"
+    security_opt:
+      - seccomp:unconfined
+    command: ["celery","worker"]
+    restart: unless-stopped
+
+  dashboard-user:
+    build:
+      context: ../..                      
+      dockerfile: deployment/docker/Dockerfile  
+    command: >
+      uvicorn services.dashboard.main_user:app
+      --host 0.0.0.0 --port 8003
+    env_file:
+      - ../../.env                        
+    volumes:
+      - ../..:/workspace:cached          
+    ports:
+      - "8003:8003"
+    depends_on:
+      - clickhouse
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../../monitoring/grafana/provisioning:/etc/grafana/provisioning  # Percorso corretto
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
+    ports:
+      - "3000:3000"
+    depends_on:
+      - clickhouse
+      - postgres
+    healthcheck:
+      test: ["CMD", "wget", "-O", "/dev/null", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  init_grafana_dashboard:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile
+    volumes:
+      - ../..:/workspace:cached
+    command: >
+      bash -c "
+      echo 'Attendo che Grafana sia pronto...' &&
+      sleep 30 &&
+      echo 'Esecuzione dello script di assemblaggio dashboard...' &&
+      python3 /workspace/monitoring/grafana/provisioning/assemble_dashboard.py
+      "
+    environment:
+      - PYTHONPATH=/workspace/src:/workspace
+    depends_on:
+      - grafana
+      - clickhouse
+      - postgres
+    restart: on-failure:5
+
+  redis-cache:
+    image: redis:alpine
+    container_name: redis-cache
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  #kafka_data:
+  clickhouse_data:
+  postgres_data:
+  airflow_pgdata:
+  airflow_data:
+  grafana_data:
+  redis_data:

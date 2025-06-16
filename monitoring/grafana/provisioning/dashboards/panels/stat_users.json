@@ -1,0 +1,67 @@
+{
+    "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "${DS_CLICKHOUSE}"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": []
+    },
+    "gridPos": {
+      "h": 4,
+      "w": 4,
+      "x": 0,
+      "y": 0
+    },
+    "id": 1,
+    "options": {
+      "colorMode": "value",
+      "graphMode": "area",
+      "justifyMode": "auto",
+      "orientation": "auto",
+      "reduceOptions": {
+        "calcs": [
+          "lastNotNull"
+        ],
+        "fields": "",
+        "values": false
+      },
+      "textMode": "auto"
+    },
+    "pluginVersion": "10.0.3",
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "${DS_CLICKHOUSE}"
+        },
+        "format": 1,
+        "meta": {
+          "builderOptions": {
+            "fields": [],
+            "limit": 100,
+            "mode": "list"
+          }
+        },
+        "queryType": "sql",
+        "rawSql": "SELECT COUNT(DISTINCT user_id) as active_users FROM nearyou.user_events WHERE event_time >= now() - INTERVAL 1 DAY",
+        "refId": "A"
+      }
+    ],
+    "title": "Utenti Attivi Oggi",
+    "type": "stat"
+  }

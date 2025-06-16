@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+.github
+
+# Docker
+.dockerignore
+**/Dockerfile
+**/docker-compose*.yml
+
+# Python
+**/__pycache__
+**/.mypy_cache
+**/.pytest_cache
+**/.coverage
+**/.tox
+**/.Python
+**/env
+**/venv
+**/.venv
+**/ENV
+**/env.bak
+**/venv.bak
+**/pythonenv*
+**/htmlcov
+**/.env
+
+# Editor files
+.idea
+.vscode
+*.swp
+*.swo
+
+# Logs
+**/*.log
+**/logs
+
+# Certificati (da includere selettivamente in base alle necessità)
+# certs/
+
+# Dati (da non includere nelle immagini per ridurre dimensioni)
+**/data
+
+# Cache
+**/.cache
+**/__pycache__
+
+# Documentazione
+**/docs

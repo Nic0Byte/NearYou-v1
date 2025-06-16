@@ -1,0 +1,39 @@
+groups:
+  - name: nearyou_recording_rules
+    interval: 15s
+    rules:
+      # CPU Usage
+      - record: instance:node_cpu_utilization:rate5m
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+        
+      # Memory Usage
+      - record: instance:node_memory_utilization:percent
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100
+        
+      # Disk Usage
+      - record: instance:node_filesystem_utilization:percent
+        expr: (node_filesystem_size_bytes{fstype!="tmpfs"} - node_filesystem_free_bytes{fstype!="tmpfs"}) / node_filesystem_size_bytes{fstype!="tmpfs"} * 100
+        
+      # API Latency
+      - record: service:request_latency_seconds:avg5m
+        expr: avg by(service) (rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]))
+        
+      # API Error Rate
+      - record: service:request_errors:ratio5m
+        expr: sum by(service) (rate(http_requests_total{status=~"5.."}[5m])) / sum by(service) (rate(http_requests_total[5m]))
+        
+      # Kafka Message Rate
+      - record: kafka:messages:rate5m
+        expr: sum by(topic) (rate(kafka_topic_partition_current_offset[5m]))
+        
+      # Kafka Consumer Lag
+      - record: kafka:consumer_lag:sum
+        expr: sum by(group, topic) (kafka_consumergroup_lag)
+        
+      # ClickHouse Query Rate
+      - record: clickhouse:query_rate:rate5m
+        expr: sum by(type) (rate(clickhouse_query_count[5m]))
+        
+      # Redis Cache Hit Ratio
+      - record: redis:cache_hit_ratio:ratio5m
+        expr: sum(rate(redis_keyspace_hits_total[5m])) / (sum(rate(redis_keyspace_hits_total[5m])) + sum(rate(redis_keyspace_misses_total[5m])))

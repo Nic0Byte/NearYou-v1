@@ -1,0 +1,24 @@
+{
+    "current": {
+      "selected": true,
+      "text": ["Tutte"],
+      "value": ["$__all"]
+    },
+    "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "ClickHouse"
+    },
+    "definition": "SELECT DISTINCT age FROM nearyou.users ORDER BY age",
+    "hide": 0,
+    "includeAll": true,
+    "label": "Fascia d'Età",
+    "multi": true,
+    "name": "age_range",
+    "options": [],
+    "query": "SELECT DISTINCT age FROM nearyou.users ORDER BY age",
+    "refresh": 1,
+    "regex": "",
+    "skipUrlSync": false,
+    "sort": 1,
+    "type": "query"
+  }

@@ -1,0 +1,24 @@
+{
+    "current": {
+      "selected": true,
+      "text": ["Tutte"],
+      "value": ["$__all"]
+    },
+    "datasource": {
+      "type": "postgres",
+      "uid": "PostgreSQL"
+    },
+    "definition": "SELECT DISTINCT category FROM shops ORDER BY category",
+    "hide": 0,
+    "includeAll": true,
+    "label": "Categoria Negozio",
+    "multi": true,
+    "name": "shop_category",
+    "options": [],
+    "query": "SELECT DISTINCT category FROM shops ORDER BY category",
+    "refresh": 1,
+    "regex": "",
+    "skipUrlSync": false,
+    "sort": 1,
+    "type": "query"
+}

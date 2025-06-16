@@ -1,0 +1,40 @@
+kafka-python
+clickhouse-driver
+Faker
+psycopg2-binary
+requests
+cryptography
+python-dotenv
+fastapi
+uvicorn
+langchain
+openai
+httpx
+langchain-community
+aiofiles
+aiokafka
+asyncpg
+# per OSRM-based routing nel producer
+polyline
+
+# per parsing GPX (se in futuro lo riutilizzi)
+gpxpy
+
+# per calcolo distanza haversine nel consumer
+haversine
+
+python-jose[cryptography]      # per JWT
+passlib[bcrypt]               # per hashing password 
+python-multipart
+
+PyJWT
+pydantic
+
+redis==4.5.5    #sistema cache per llm
+
+
+prometheus-client==0.19.0
+prometheus-fastapi-instrumentator==6.1.0
+
+bytewax==0.19.0
+confluent-kafka==2.3.0

@@ -1,0 +1,41 @@
+{
+    "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "ClickHouse"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "color": {"mode": "thresholds"},
+        "custom": {
+          "align": "auto",
+          "displayMode": "auto",
+          "inspect": false,
+          "filterable": true
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [{"color": "green", "value": null}]
+        }
+      },
+      "overrides": []
+    },
+    "options": {
+      "footer": {"enablePagination": true},
+      "showHeader": true
+    },
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "ClickHouse"
+        },
+        "format": 1,
+        "queryType": "sql",
+        "rawSql": "SELECT user_id, username, full_name, email, phone_number, password, user_type, gender, age, profession, interests, country, city, registration_time FROM nearyou.users",
+        "refId": "A"
+      }
+    ],
+    "title": "Lista Utenti Completa",
+    "type": "table"
+  }

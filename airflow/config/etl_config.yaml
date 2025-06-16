@@ -1,0 +1,23 @@
+# airflow/config/etl_config.yaml
+# Configurazione ETL Adattivo - Valori di default sensati
+
+schedule:
+  default: weekly          # Schedule di base
+  min_days: 3             # Minimo giorni tra run
+  max_days: 14            # Massimo giorni senza run
+
+thresholds:
+  anomaly_std_dev: 2.5    # Deviazioni standard per anomalia
+  min_changes: 10         # Minimo cambiamenti per considerare anomalia
+
+periods:
+  high_activity:
+    - month: 12           # Dicembre
+      reason: "Shopping natalizio"
+    - month: 1            # Gennaio  
+      reason: "Saldi invernali"
+    - month: 7            # Luglio
+      reason: "Saldi estivi"
+    - month: 9
+      days: [1, 15]       # 1-15 Settembre
+      reason: "Back to school"

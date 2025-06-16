@@ -1,0 +1,38 @@
+{
+    "current": {
+      "selected": true,
+      "text": ["Tutte"],
+      "value": ["$__all"]
+    },
+    "hide": 0,
+    "includeAll": true,
+    "label": "Popolarità Negozio",
+    "multi": true,
+    "name": "shop_popularity",
+    "options": [
+      {
+        "selected": true,
+        "text": "Tutte",
+        "value": "$__all"
+      },
+      {
+        "selected": false,
+        "text": "Alta (>100 visite)",
+        "value": "high"
+      },
+      {
+        "selected": false,
+        "text": "Media (20-100 visite)",
+        "value": "medium"
+      },
+      {
+        "selected": false,
+        "text": "Bassa (<20 visite)",
+        "value": "low"
+      }
+    ],
+    "query": "high,medium,low",
+    "queryValue": "",
+    "skipUrlSync": false,
+    "type": "custom"
+}

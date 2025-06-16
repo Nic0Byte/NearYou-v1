@@ -1,0 +1,38 @@
+{
+    "current": {
+      "selected": true,
+      "text": "ultimi 24 ore",
+      "value": "now-24h"
+    },
+    "hide": 0,
+    "includeAll": false,
+    "label": "Periodo",
+    "multi": false,
+    "name": "time_range",
+    "options": [
+      {
+        "selected": true,
+        "text": "ultimi 24 ore",
+        "value": "now-24h"
+      },
+      {
+        "selected": false,
+        "text": "ultimi 3 giorni",
+        "value": "now-3d"
+      },
+      {
+        "selected": false,
+        "text": "ultima settimana",
+        "value": "now-7d"
+      },
+      {
+        "selected": false,
+        "text": "ultimo mese",
+        "value": "now-30d"
+      }
+    ],
+    "query": "now-24h, now-3d, now-7d, now-30d",
+    "queryValue": "",
+    "skipUrlSync": false,
+    "type": "custom"
+}

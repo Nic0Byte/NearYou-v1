@@ -1,0 +1,6 @@
+# Include le dipendenze base
+-r base.txt
+
+# Dipendenze specifiche per produzione
+gunicorn==21.2.0
+uvloop==0.18.0

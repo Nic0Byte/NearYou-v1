@@ -1,0 +1,24 @@
+{
+    "current": {
+      "selected": true,
+      "text": ["Tutte"],
+      "value": ["$__all"]
+    },
+    "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "ClickHouse"
+    },
+    "definition": "SELECT DISTINCT profession FROM nearyou.users ORDER BY profession",
+    "hide": 0,
+    "includeAll": true,
+    "label": "Professione",
+    "multi": true,
+    "name": "profession",
+    "options": [],
+    "query": "SELECT DISTINCT profession FROM nearyou.users ORDER BY profession",
+    "refresh": 1,
+    "regex": "",
+    "skipUrlSync": false,
+    "sort": 1,
+    "type": "query"
+  }

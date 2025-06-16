@@ -1,0 +1,70 @@
+# File principale docker-compose.yml nella root del progetto
+version: "3.9"
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  env_file:
+    - .env
+
+services:
+  # Service per avviare tutti i servizi (incluso query-service)
+  all-services:
+    image: busybox
+    command: echo "Avvio completo di NearYou con pattern Kappa. Attendi che tutti i servizi siano pronti."
+    depends_on:
+      - osrm-milano
+      - kafka
+      - clickhouse
+      - postgres
+      - airflow-webserver
+      - message-generator
+      - dashboard-user
+      - grafana
+      - producer
+      - consumer
+      - prometheus
+      - loki
+      - promtail
+      - node-exporter
+      - cadvisor
+      - query-service           # AGGIUNTO
+      - batch-aggregator        # AGGIUNTO
+      - materialized-views-init # AGGIUNTO
+
+  # Servizio per inizializzare viste materializzate
+  materialized-views-init:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile
+    command: python3 /workspace/src/data_pipeline/materialized_views.py
+    depends_on:
+      - clickhouse
+      - init_clickhouse
+    restart: "no"  # Esegue solo una volta
+
+  # Servizio per aggregazioni batch periodiche
+  batch-aggregator:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile
+    command: >
+      bash -c "
+      while true; do
+        echo 'Esecuzione aggregazioni batch...'
+        python3 /workspace/src/data_pipeline/materialized_views.py
+        echo 'Aggregazioni completate. Attendo 1 ora...'
+        sleep 3600
+      done
+      "
+    depends_on:
+      - clickhouse
+      - postgres
+      - query-service
+    environment:
+      - PYTHONPATH=/workspace/src:/workspace
+
+include:
+  - ./deployment/docker/docker-compose.yml
+  - ./monitoring/docker-compose.monitoring.yml

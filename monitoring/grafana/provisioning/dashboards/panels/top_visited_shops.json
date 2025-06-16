@@ -1,0 +1,75 @@
+{
+    "datasource": {
+      "type": "grafana-clickhouse-datasource",
+      "uid": "ClickHouse"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "palette-classic"
+        },
+        "custom": {
+          "axisCenteredZero": false,
+          "axisColorMode": "text",
+          "axisLabel": "Visite Totali",
+          "axisPlacement": "auto",
+          "fillOpacity": 80,
+          "gradientMode": "none",
+          "hideFrom": {
+            "legend": false,
+            "tooltip": false,
+            "viz": false
+          },
+          "lineWidth": 1,
+          "scaleDistribution": {
+            "type": "linear"
+          }
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": []
+    },
+    "options": {
+      "barRadius": 0,
+      "barWidth": 0.7,
+      "groupWidth": 0.7,
+      "legend": {
+        "calcs": [],
+        "displayMode": "list",
+        "placement": "bottom",
+        "showLegend": false
+      },
+      "orientation": "auto",
+      "showValue": "auto",
+      "stacking": "none",
+      "tooltip": {
+        "mode": "single",
+        "sort": "none"
+      },
+      "xTickLabelRotation": 0,
+      "xTickLabelSpacing": 0
+    },
+    "targets": [
+      {
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "ClickHouse"
+        },
+        "format": 1,
+        "queryType": "sql",
+        "rawSql": "SELECT \n    poi_name,\n    COUNT(*) as total_visits\nFROM nearyou.user_events\nWHERE event_time >= now() - INTERVAL 24 HOUR\nAND (poi_name IN (${selected_shops:sqlquote}) OR '$__all' IN (${selected_shops:sqlquote}))\nGROUP BY poi_name\nORDER BY total_visits DESC\nLIMIT 10",
+        "refId": "A"
+      }
+    ],
+    "title": "Top 10 Negozi Più Visitati (Ultime 24 Ore)",
+    "type": "barchart"
+  }

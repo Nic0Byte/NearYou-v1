@@ -1,0 +1,112 @@
+{
+    "datasource": {
+      "type": "postgres",
+      "uid": "PostgreSQL"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "custom": {
+          "hideFrom": {
+            "legend": false,
+            "tooltip": false,
+            "viz": false
+          }
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "red",
+              "value": null
+            }
+          ]
+        }
+      },
+      "overrides": []
+    },
+    "options": {
+      "basemap": {
+        "config": {},
+        "name": "Layer 0",
+        "type": "default"
+      },
+      "controls": {
+        "mouseWheelZoom": true,
+        "showAttribution": true,
+        "showDebug": false,
+        "showMeasure": false,
+        "showScale": true,
+        "showZoom": true
+      },
+      "layers": [
+        {
+          "config": {
+            "showLegend": true,
+            "style": {
+              "color": {
+                "fixed": "dark-red"
+              },
+              "opacity": 1,
+              "rotation": {
+                "fixed": 0,
+                "max": 360,
+                "min": -360,
+                "mode": "mod"
+              },
+              "size": {
+                "fixed": 10,
+                "max": 15,
+                "min": 5
+              },
+              "symbol": {
+                "fixed": "img/icons/marker/circle.svg",
+                "mode": "fixed"
+              },
+              "text": {
+                "field": "shop_name",
+                "fixed": "",
+                "mode": "field"
+              }
+            }
+          },
+          "location": {
+            "latitude": "lat",
+            "longitude": "lon",
+            "mode": "coords"
+          },
+          "name": "Negozi Centro Milano",
+          "tooltip": true,
+          "type": "markers"
+        }
+      ],
+      "tooltip": {
+        "mode": "details"
+      },
+      "view": {
+        "allLayers": true,
+        "id": "coords",
+        "lat": 45.464,
+        "lon": 9.19,
+        "zoom": 14
+      }
+    },
+    "targets": [
+      {
+        "datasource": {
+          "type": "postgres",
+          "uid": "PostgreSQL"
+        },
+        "editorMode": "code",
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT \n    shop_id, \n    shop_name, \n    category,\n    ST_Y(geom) as lat, \n    ST_X(geom) as lon \nFROM shops\nWHERE ST_Y(geom) BETWEEN 45.45 AND 45.48\nAND ST_X(geom) BETWEEN 9.17 AND 9.21\nLIMIT 50",
+        "refId": "A"
+      }
+    ],
+    "title": "Mappa dei Negozi (Centro Milano)",
+    "type": "geomap"
+  }

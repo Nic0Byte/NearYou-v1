@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NearYou – Dashboard Utente</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/static_user/css/styles.css" />
+</head>
+<body>
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loader-text">Caricamento in corso...</div>
+  </div>
+
+  <div class="container" style="display: none;">
+    <div id="header">
+      <div class="logo">
+        <i class="fas fa-location-dot"></i>
+        <span>NearYou</span>
+      </div>
+      <div class="header-controls">
+        <button id="theme-toggle">
+          <i class="fas fa-moon"></i>
+        </button>
+        <div id="user-profile">
+          <div id="user-avatar">U</div>
+          <span id="welcomeText">Benvenuto</span>
+          <button id="logoutButton" style="margin-left: 10px; padding: 5px 10px; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+            <i class="fas fa-sign-out-alt"></i> Esci
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <div id="sidebar">
+        <div class="sidebar-section">
+          <h3><i class="fas fa-user"></i> Profilo Utente</h3>
+          <ul class="user-info-list" id="user-profile-info">
+            <li><i class="fas fa-id-badge"></i> <span id="user-id">ID: --</span></li>
+            <li><i class="fas fa-birthday-cake"></i> <span id="user-age">Età: --</span></li>
+            <li><i class="fas fa-briefcase"></i> <span id="user-job">Professione: --</span></li>
+            <li><i class="fas fa-heart"></i> <span id="user-interests">Interessi: --</span></li>
+          </ul>
+        </div>
+
+        <div class="sidebar-section">
+          <h3><i class="fas fa-chart-line"></i> Statistiche</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="total-distance">0</div>
+              <div class="stat-label">km percorsi</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="shops-nearby">0</div>
+              <div class="stat-label">negozi vicini</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="total-notifications">0</div>
+              <div class="stat-label">notifiche</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="active-time">0</div>
+              <div class="stat-label">minuti attivi</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3><i class="fas fa-bell"></i> Promozioni Recenti</h3>
+          <div class="notification-list" id="notifications-container">
+            <!-- Notifications will be added here -->
+          </div>
+          <!-- Sentinel element for lazy loading more notifications -->
+          <div class="notification-sentinel"></div>
+          <button id="load-more-notifications" class="load-more-btn">
+            Carica altre notifiche
+          </button>
+        </div>
+      </div>
+
+      <div id="map-container">
+        <div id="map"></div>
+        <div class="map-controls">
+          <button id="center-map" title="Centra sulla mia posizione">
+            <i class="fas fa-crosshairs"></i>
+          </button>
+          <button id="clear-route" title="Cancella percorso">
+            <i class="fas fa-broom"></i>
+          </button>
+        </div>
+        <div id="categories-filter">
+          <div class="category-pill active" data-category="all">Tutti</div>
+          <div class="category-pill" data-category="ristorante">Ristoranti</div>
+          <div class="category-pill" data-category="abbigliamento">Abbigliamento</div>
+          <div class="category-pill" data-category="supermercato">Supermercati</div>
+          <div class="category-pill" data-category="elettronica">Elettronica</div>
+          <div class="category-pill" data-category="bar">Bar & Caffè</div>
+        </div>
+        <button class="sidebar-toggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="login-card">
+    <h2>Accedi a NearYou</h2>
+    <div class="input-group">
+      <label for="user">Username</label>
+      <input id="user" placeholder="Inserisci username" autocomplete="username" />
+    </div>
+    <div class="input-group">
+      <label for="pass">Password</label>
+      <input id="pass" type="password" placeholder="Inserisci password" autocomplete="current-password" />
+    </div>
+    <button id="btn">Accedi</button>
+    <div id="err"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="/static_user/js/main.js"></script>
+</body>
+</html>

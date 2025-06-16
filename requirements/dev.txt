@@ -1,0 +1,32 @@
+# Include le dipendenze base
+-r base.txt
+
+# Strumenti di sviluppo e qualità del codice
+flake8==7.2.0
+black==25.1.0
+isort==6.0.1
+mypy==1.15.0
+pre-commit==3.5.0
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.23.2
+pytest-mock==3.12.0
+
+# Type stubs per alcune librerie (mypy)
+types-requests
+types-redis   
+types-PyJWT   
+
+# Dipendenze per la documentazione
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+
+# Strumenti di debugging
+ipython==8.21.0
+debugpy==1.8.0
+
+# Dipendenze di CI/CD
+coverage==7.4.2
+codecov==2.1.13

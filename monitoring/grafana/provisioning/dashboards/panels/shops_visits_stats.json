@@ -1,0 +1,80 @@
+{
+  "datasource": {
+    "type": "grafana-clickhouse-datasource",
+    "uid": "ClickHouse"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "color": {
+        "mode": "palette-classic"
+      },
+      "custom": {
+        "axisCenteredZero": false,
+        "axisColorMode": "text",
+        "axisLabel": "Visite",
+        "axisPlacement": "auto",
+        "barAlignment": 0,
+        "drawStyle": "bars",
+        "fillOpacity": 50,
+        "gradientMode": "none",
+        "hideFrom": {
+          "legend": false,
+          "tooltip": false,
+          "viz": false
+        },
+        "lineInterpolation": "linear",
+        "lineWidth": 1,
+        "pointSize": 5,
+        "scaleDistribution": {
+          "type": "linear"
+        },
+        "showPoints": "auto",
+        "spanNulls": false,
+        "stacking": {
+          "group": "A",
+          "mode": "none"
+        },
+        "thresholdsStyle": {
+          "mode": "off"
+        }
+      },
+      "mappings": [],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          {
+            "color": "green",
+            "value": null
+          }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "options": {
+    "legend": {
+      "calcs": ["sum"],
+      "displayMode": "table",
+      "placement": "right",
+      "showLegend": true
+    },
+    "tooltip": {
+      "mode": "single",
+      "sort": "none"
+    }
+  },
+  "targets": [
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "ClickHouse"
+      },
+      "format": 1,
+      "queryType": "sql",
+      "rawSql": "SELECT \n    poi_name,\n    toStartOfHour(event_time) as time,\n    COUNT(*) as visits\nFROM nearyou.user_events\nWHERE event_time >= NOW() - INTERVAL 24 HOUR\nAND ('$__all' IN ('${selected_shops:raw}') OR LENGTH('${selected_shops:raw}') = 0)\nGROUP BY poi_name, time\nORDER BY time DESC, visits DESC\nLIMIT 100",
+      "refId": "A"
+    }
+  ],
+  "title": "Visite per Negozio (Ultimi 24 Ore)",
+  "type": "timeseries"
+}

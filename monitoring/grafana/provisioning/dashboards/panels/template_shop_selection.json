@@ -1,0 +1,24 @@
+{
+  "current": {
+    "selected": true,
+    "text": ["Tutti"],
+    "value": ["$__all"]
+  },
+  "datasource": {
+    "type": "postgres",
+    "uid": "PostgreSQL"
+  },
+  "definition": "SELECT shop_name FROM shops ORDER BY shop_name",
+  "hide": 0,
+  "includeAll": true,
+  "label": "Negozi",
+  "multi": true,
+  "name": "selected_shops",
+  "options": [],
+  "query": "SELECT shop_name FROM shops ORDER BY shop_name",
+  "refresh": 1,
+  "regex": "",
+  "skipUrlSync": false,
+  "sort": 1,
+  "type": "query"
+}

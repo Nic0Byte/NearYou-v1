@@ -1,0 +1,66 @@
+groups:
+  - name: nearyou_alerts
+    rules:
+      - alert: InstanceDown
+        expr: up{job!~"postgres|redis|clickhouse|kafka"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Istanza inattiva"
+          description: "Un'istanza del job {{ $labels.job }} è inattiva da più di 1 minuto."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} has high memory usage: {{ $value | printf \"%.2f\" }}%"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} has high CPU usage: {{ $value | printf \"%.2f\" }}%"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{fstype!="tmpfs",mountpoint!="/boot"} - node_filesystem_free_bytes{fstype!="tmpfs",mountpoint!="/boot"}) / node_filesystem_size_bytes{fstype!="tmpfs",mountpoint!="/boot"} * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} has high disk usage on {{ $labels.mountpoint }}: {{ $value | printf \"%.2f\" }}%"
+          
+      # Alert specifici per NearYou
+      - alert: KafkaLag
+        expr: kafka_consumergroup_lag > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka consumer lag in {{ $labels.group }}"
+          description: "Consumer group {{ $labels.group }} for topic {{ $labels.topic }} has a lag of {{ $value }} messages"
+
+      - alert: SlowDBQueries
+        expr: rate(clickhouse_query_duration_ms_sum[5m]) / rate(clickhouse_query_duration_ms_count[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow ClickHouse queries detected"
+          description: "Average query duration is {{ $value | printf \"%.2f\" }}ms over the last 5 minutes"
+
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP error rate"
+          description: "Error rate is {{ $value | printf \"%.2f\" }}% over the last 5 minutes"
